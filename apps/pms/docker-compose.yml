@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  pms_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pms_db
+    volumes:
+      - ./database/pms_db.sql:/docker-entrypoint-initdb.d/pms_db.sql
+    ports:
+      - "3313:3306"
+    restart: on-failure
+    networks:
+      - elk_network
+
+  pms_app:
+    build: .
+    depends_on:
+      - pms_db
+    ports:
+      - "8099:80"
+    volumes:
+      - ./ossec.conf:/var/ossec/etc/ossec.conf
+      - ./logs:/var/ossec/logs
+    restart: on-failure
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true

@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  db:
+    image: mariadb:10.3
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./sql/nhanes:/docker-entrypoint-initdb.d/
+      - db_data:/var/lib/mysql
+      - ./mariadb-custom-conf/custom.cnf:/etc/mysql/conf.d/custom.cnf # Mount custom MariaDB config
+    restart: always
+    env_file: ./docker/.env.mysql
+    networks:
+      - elk_network
+
+  lh-ehr:
+    image: zeeshanzulkiflshah43643/lh-ehr:latest
+    volumes:
+      - .:/var/www/html
+      - ./docker/default_site/:/var/www/html/sites/default/
+      - ./logs:/var/ossec/logs # Mount logs for Wazuh agent
+    ports:
+      - "8002:80"
+    restart: always
+    env_file: ./docker/.env.ehr
+    depends_on:
+      - db
+    networks:
+      - elk_network
+
+  adminer:
+    image: adminer:4
+    restart: always
+    ports:
+      - "8001:8080"
+    depends_on:
+      - db
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  db_data:

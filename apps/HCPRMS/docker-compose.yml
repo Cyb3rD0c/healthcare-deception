@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  hcprms:
+    build: .
+    ports:
+      - "8096:80"  # Change the port here
+    depends_on:
+      - hcprms_db
+    networks:
+      - elk_network
+
+  hcprms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hcpms
+      MYSQL_USER: hcpmsuser
+      MYSQL_PASSWORD: hchpmspassword
+    volumes:
+      - hcprms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true
+volumes:
+  hcprms_db_data:

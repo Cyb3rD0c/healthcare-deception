@@ -1,0 +1,16 @@
+File Hash,Cloud Provider,Occurrence Count,Malicious Count,MITRE ATT\CK IDs,Threat Level
+H8,Azure,50,15,"T1573, T1071",Informative
+H13,Azure,50,28,None,None
+H7,Azure,47,64,"[l]T1078, T1059.001,",
+H12,Azure,42,36,"[l]T1014, T1543, T1564,",
+H9,Azure,42,38,T1573.001,Informative
+H62,AWS,3976,28,T1071,Malicious
+H63,AWS,2099,0,"[l]T1573.001, T1573,",
+H8,AWS,50,15,"T1573, T1071",Informative
+H13,AWS,50,28,None,None
+H7,AWS,47,64,"[l]T1078, T1059.001,",
+H62,OVH,3976,28,T1071,Malicious
+H63,OVH,2099,0,"[l]T1573.001, T1573,",
+H8,OVH,50,15,"T1573, T1071",Informative
+H13,OVH,50,28,None,None
+H7,OVH,47,64,"[l]T1078, T1059.001,",

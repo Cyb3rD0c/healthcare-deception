@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8101:80"
+    volumes:
+      - ./php-med-cert-generator:/var/www/html
+      - ./logs:/var/log/myapp
+    environment:
+      - MYSQL_HOST=mcg_db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DB=mcg_db
+    depends_on:
+      - mcg_db
+    networks:
+      - elk_network
+    restart: always
+    mem_limit: 512M
+    cpus: '0.5'
+
+  mcg_db:
+    image: mysql:8.0
+    container_name: mydb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mcg_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/mcg_db.sql:/docker-entrypoint-initdb.d/mcg_db.sql:ro
+    networks:
+      - elk_network
+    restart: always
+    mem_limit: 512M
+    cpus: '0.5'
+
+volumes:
+  db_data:
+
+networks:
+  elk_network:
+    external: true

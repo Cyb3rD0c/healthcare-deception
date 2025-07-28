@@ -1,0 +1,20 @@
+# Use PHP with Apache already installed
+FROM local/php-seeder-base:latest
+
+# Install extensions that HCPMS might need
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Copy the application files to the container
+COPY . /var/www/html/
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable the custom configuration
+RUN a2ensite 000-default
+# Change the ownership of the files to the web server user
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose port 80 for the web server
+EXPOSE 80

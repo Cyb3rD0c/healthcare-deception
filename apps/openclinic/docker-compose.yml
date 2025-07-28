@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  openclinic:
+    build: .
+    ports:
+      - "8091:80"
+    volumes:
+      - ./000-default.conf:/etc/apache2/sites-available/000-default.conf
+    depends_on:
+      - openclinic_db
+    environment:
+      - DB_HOST=openclinic_db
+      - DB_USER=root
+      - DB_PASSWORD=root_password
+      - DB_NAME=openclinic
+    networks:
+      - elk_network
+
+  openclinic_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: openclinic
+    networks:
+      - elk_network
+    volumes:
+      - openclinic-db-data:/var/lib/mysql
+      - ./install/sql:/docker-entrypoint-initdb.d
+    command: ['mysqld', '--init-file=/docker-entrypoint-initdb.d/init.sql']
+
+volumes:
+  openclinic-db-data:
+
+networks:
+  elk_network:
+    external: true

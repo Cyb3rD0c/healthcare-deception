@@ -1,0 +1,33 @@
+FROM php:7.4-apache
+
+# 1) PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mysqli && a2enmod rewrite
+
+# 2) Python + Faker + PyMySQL
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    pip3 install Faker pymysql
+
+# 3) Copy seeder and make it executable
+COPY seeder.py /usr/local/bin/seeder.py
+RUN chmod +x /usr/local/bin/seeder.py
+
+# copy our little bootstrap into PHP's conf.d
+COPY php-env-bootstrap.php /usr/local/etc/php/conf.d/00-php-env-bootstrap.php
+
+# ensure it actually prepends to every request (both CLI & Apache‐mod-php)
+CMD [ "bash", "-lc", "docker-php-entrypoint apache2-foreground" ]
+# note: apache2-foreground already respects conf.d files,
+# so our 00-*.php will be included automatically before user code.
+
+
+# 4) Default entrypoint will seed then launch Apache
+ENTRYPOINT ["bash","-lc", "\
+  echo 'Waiting for DB at $DB_HOST:$DB_PORT…'; \
+  for i in {1..10}; do \
+    mysqladmin ping -h\"$DB_HOST\" -u\"$DB_USER\" -p\"$DB_PASS\" --silent && break; \
+    echo '  still waiting…'; sleep 2; \
+  done && \
+  echo 'DB is up — running seeder' && \
+  python3 /usr/local/bin/seeder.py && \
+  exec docker-php-entrypoint apache2-foreground"]

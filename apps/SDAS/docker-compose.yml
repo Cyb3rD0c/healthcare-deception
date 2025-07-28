@@ -1,0 +1,39 @@
+version: '3.1'
+
+services:
+  sdas-app:
+    build: .
+    container_name: doctors_appointment_web
+    ports:
+      - "8092:80" # Map port 80 in the container to 8080 on the host (use any available port)
+    networks:
+      - elk_network
+    volumes:
+      - .:/var/www/html
+      - logs:/var/log/apache2
+    depends_on:
+      - sdas-db
+
+  sdas-db:
+    image: mariadb:latest
+    container_name: doctors_appointment_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: doctors_appointment_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    volumes:
+      - sdas_db_data:/var/lib/mysql
+      - ./database/doctors_appointment_db.sql:/docker-entrypoint-initdb.d/doctors_appointment_db.sql
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  web_data:
+  sdas_db_data:
+  logs:

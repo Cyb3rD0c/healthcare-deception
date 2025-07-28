@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  hospital_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hospital_db
+    volumes:
+      - ./db_info.txt:/docker-entrypoint-initdb.d/hospital_db.sql
+    ports:
+      - "3312:3306"
+    networks:
+      - elk_network
+    restart: on-failure
+
+  hospital_app:
+    image: zeeshanzulkiflshah43643/hospital-management-system:latest
+    depends_on:
+      - hospital_db
+    ports:
+      - "8103:80"
+    networks:
+      - elk_network
+    volumes:
+      - ./source:/var/www/html
+      - ./ossec.conf:/var/ossec/etc/ossec.conf
+      - wazuh_data:/var/ossec/data
+    restart: on-failure
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  wazuh_data:

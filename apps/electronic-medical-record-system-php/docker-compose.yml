@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  emr-db:
+    image: mariadb:10.5
+    container_name: emr-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: Clinic
+      MYSQL_USER: emruser
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - emr-db-data:/var/lib/mysql
+      - ./sql/clinic.sql:/docker-entrypoint-initdb.d/clinic.sql
+    networks:
+      - elk_network
+
+  emr-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: emr-app
+    ports:
+      - "8085:80"
+    volumes:
+      - ./emr:/var/www/html
+    depends_on:
+      - emr-db
+    networks:
+      - elk_network
+    environment:
+      WAIT_HOSTS: emr-db:3306
+      WAIT_HOSTS_TIMEOUT: 300
+      WAIT_SLEEP_INTERVAL: 30
+      WAIT_HOSTS_CMD: "echo 'Database is ready!'"
+    entrypoint: ["/usr/local/bin/wait-for-it.sh", "emr-db:3306", "--", "docker-php-entrypoint", "apache2-foreground"]
+
+volumes:
+  emr-db-data:
+
+networks:
+  elk_network:
+    external: true

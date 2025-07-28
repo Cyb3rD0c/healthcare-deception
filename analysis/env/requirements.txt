@@ -1,0 +1,30 @@
+# core data science
+numpy>=1.23.5
+pandas>=2.0.1
+scipy>=1.10.0
+scikit-learn>=1.2.2
+
+# dimensionality reduction & clustering
+umap-learn>=0.5.3
+hdbscan>=0.8.29
+faiss-cpu>=1.7.2
+
+# embeddings & NLP
+gensim>=4.2.0
+
+# external intelligence APIs
+greynoise>=2.3.0
+geoip2>=4.8.0
+
+# geospatial
+geopandas>=0.12.2
+
+# logging / HTTP
+python-json-logger>=2.0.4
+requests>=2.31.0
+
+# productivity / plotting / notebooks
+jupyter>=1.0.0
+matplotlib>=3.7.1
+tqdm>=4.65.0
+

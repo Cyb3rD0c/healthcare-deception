@@ -1,0 +1,37 @@
+version: '3.1'
+
+services:
+  medical-db:
+    image: mariadb:10.5
+    container_name: medical-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: medical
+      MYSQL_USER: medical
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - medical-db-data:/var/lib/mysql
+      - ./store.sql:/var/www/html/assets/store.sql  # Mount store.sql directly into the container
+    networks:
+      - elk_network
+    command: ["sh", "-c", "echo 'Waiting for DB to be ready...' && while ! mysqladmin ping -h localhost --silent; do echo 'waiting for mysql'; sleep 5; done && mysql -u root -pyourpassword medical < /var/www/html/assets/store.sql && echo 'Database initialized' && tail -f /dev/null"]
+  medical-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: medical-app
+    ports:
+      - "8088:80"
+    volumes:
+      - ./medical:/var/www/html
+    depends_on:
+      - medical-db
+    networks:
+      - elk_network
+
+volumes:
+  medical-db-data:
+
+networks:
+  elk_network:
+    external: true

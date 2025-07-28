@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  remoteclinic_app:
+    build: .
+    ports:
+      - "8100:80"
+    networks:
+      - elk_network
+    volumes:
+      - remoteclinic_data:/var/www/html/storage
+      - remoteclinic_cache:/var/www/html/bootstrap/cache
+      - ./logs:/var/log/myapp
+    restart: on-failure
+    mem_limit: 512M  # Adjust based on available resources
+
+  remoteclinic_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: remoteclinic_db
+      MYSQL_USER: remoteclinic_user
+      MYSQL_PASSWORD: remoteclinic_password
+    volumes:
+      - remoteclinic_db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3316:3306"
+    networks:
+      - elk_network
+    restart: on-failure
+    mem_limit: 512M  # Adjust based on available resources
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  remoteclinic_data:
+  remoteclinic_cache:
+  remoteclinic_db_data:

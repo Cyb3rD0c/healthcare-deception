@@ -1,0 +1,44 @@
+version: '3.1'
+services:
+  mysql:
+    restart: always
+    image: mariadb:10.11
+    command: ['mysqld', '--character-set-server=utf8mb4']
+    ports:
+      - 3306:3306
+    volumes:
+      - databasevolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - elk_network
+
+  openemr:
+    restart: always
+    image: zeeshanzulkiflshah43643/openemr:latest
+    ports:
+      - 8102:80
+      - 8444:443
+    volumes:
+      - logvolume01:/var/log
+      - sitevolume:/var/www/localhost/htdocs/openemr/sites
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_ROOT_PASS: root
+      MYSQL_USER: openemr
+      MYSQL_PASS: openemr
+      OE_USER: admin
+      OE_PASS: pass
+    depends_on:
+      - mysql
+    networks:
+      - elk_network
+
+volumes:
+  logvolume01: {}
+  sitevolume: {}
+  databasevolume: {}
+
+networks:
+  elk_network:
+    external: true

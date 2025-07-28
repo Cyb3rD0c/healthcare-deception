@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  scheduler_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: scheduler_db
+    volumes:
+      - scheduler_db_data:/var/lib/mysql
+      - ./database/scheduler_db.sql:/docker-entrypoint-initdb.d/scheduler_db.sql
+    ports:
+      - "3311:3306"
+    networks:
+      - elk_network
+    restart: on-failure
+
+  scheduler_app:
+    image: zeeshanzulkiflshah43643/scheduler-system:latest
+    depends_on:
+      - scheduler_db
+    ports:
+      - "8107:80"
+    networks:
+      - elk_network
+    restart: on-failure
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  scheduler_db_data:

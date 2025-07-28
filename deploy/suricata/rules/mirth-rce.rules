@@ -1,0 +1,17 @@
+# mirth-rce.rules
+# CVE-2023-37679: unauthenticated RCE in Mirth Connect ≤4.3.0 (JRE ≤8)
+
+# 1) Look for Java exec calls piggy-backed in HTTP POSTs to the admin API
+alert http any any -> any 8080 (msg:"EXPLOIT Mirth Connect RCE CVE-2023-37679"; \
+    flow:established,to_server; \
+    http.method; content:"POST"; \
+    http.uri; pcre:"/channels\/.*\/runScript/"; \
+    http.client_body; content:"Runtime.getRuntime"; nocase; \
+    classtype:attempted-admin; sid:1000002001; rev:1;)
+
+# 2) (Optional) Some PoCs use JSON payload with "script" key
+alert http any any -> any 8080 (msg:"EXPLOIT Mirth Connect RCE CVE-2023-37679 JSON script"; \
+    flow:established,to_server; \
+    http.client_body; pcre:"/\"script\"\s*:\s*\"var\s+.*exec\(/i"; \
+    classtype:attempted-admin; sid:1000002002; rev:1;)
+

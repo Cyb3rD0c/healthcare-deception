@@ -1,0 +1,41 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    container_name: hhims_web
+    networks:
+      - elk_network
+    ports:
+      - "8095:80"  # Map to a different port
+    volumes:
+      - hhims_data:/var/www/html/application/config  # Ensure persistence of configuration
+      - hhims_logs:/var/log/apache2  # Ensure persistence of Apache logs
+    environment:
+      - APACHE_LOG_DIR=/var/log/apache2
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.5
+    container_name: hhims_db
+    networks:
+      - elk_network
+    ports:
+      - "3307:3306"  # Map to a different port
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hhims
+      MYSQL_USER: hhimsuser
+      MYSQL_PASSWORD: hhimsuserpassword
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  hhims_data:
+  hhims_logs:
+
+networks:
+  elk_network:
+    external: true

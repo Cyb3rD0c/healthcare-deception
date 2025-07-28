@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Python env
+*.env
+
+# Logs & raw data
+*.log
+data/sample_data.csv
+
+# Secrets & keys
+*.pem
+*.key
+
+# filter-repo helper
+remove_secrets.txt

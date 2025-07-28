@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  emr_app:
+    image: zeeshanzulkiflshah43643/emr_system:latest
+    ports:
+      - "8104:80"
+    networks:
+      - elk_network
+    volumes:
+      - emr_app_data:/var/www/html/storage
+      - emr_cache:/var/www/html/bootstrap/cache
+      - ./source/ossec.conf:/var/ossec/etc/ossec.conf
+      - ./logs:/var/log/myapp
+    restart: on-failure
+
+  emr_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: clinic
+      MYSQL_USER: emr_user
+      MYSQL_PASSWORD: emr_password
+    volumes:
+      - emr_db_data:/var/lib/mysql
+      - /home/healthy/Github/emr_sys/source/import_database/clinic.sql:/docker-entrypoint-initdb.d/clinic.sql
+    ports:
+      - "3315:3306"
+    networks:
+      - elk_network
+    restart: on-failure
+
+volumes:
+  emr_app_data:
+  emr_cache:
+  emr_db_data:
+
+networks:
+  elk_network:
+    external: true

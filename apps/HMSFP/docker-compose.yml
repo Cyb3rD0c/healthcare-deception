@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  hcpms_app:
+    build: .
+    ports:
+      - "8094:80"
+    depends_on:
+      - hcpms_db
+    networks:
+      - elk_network
+
+  hcpms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hms
+      MYSQL_USER: hmsuser
+      MYSQL_PASSWORD: hmspassword
+    volumes:
+      - hcpms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  hcpms_db_data:

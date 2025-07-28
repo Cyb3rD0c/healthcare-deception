@@ -1,0 +1,36 @@
+version: '3.1'
+
+services:
+  hprms-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: hprms-app
+    ports:
+      - "8093:80"
+    environment:
+      - BASE_URL=http://4.200.34.43:8093/ # Change this to the actual base URL for each deployment
+    depends_on:
+      - hprms-db
+    networks:
+      - elk_network
+
+  hprms-db:
+    image: mariadb:10.5
+    container_name: hprms-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: hprms_db
+      MYSQL_USER: hprmsuser
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - hprms-db-data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - elk_network
+volumes:
+  hprms-db-data:
+
+networks:
+  elk_network:
+    external: true

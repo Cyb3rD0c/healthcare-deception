@@ -1,0 +1,1 @@
+# no external HL7 libs required for simple MLLP send

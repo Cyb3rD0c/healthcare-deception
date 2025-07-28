@@ -1,0 +1,37 @@
+version: '3.1'
+
+services:
+  hms-db:
+    image: mariadb:10.5
+    container_name: hms-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: hospitaldb
+      MYSQL_USER: hmsuser
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - hms-db-data:/var/lib/mysql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    networks:
+      - elk_network
+
+  hms-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: hms-app
+    ports:
+      - "8086:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - hms-db
+    networks:
+      - elk_network
+
+volumes:
+  hms-db-data:
+
+networks:
+  elk_network:
+    external: true

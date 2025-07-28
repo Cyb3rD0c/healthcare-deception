@@ -1,0 +1,6 @@
+Method,Silhouette Score,AMI (vs. Multi-View)
+Single-View (Semantic),0.97,0.4025
+Single-View (Categorical),0.88,0.2821
+Single-View (Temporal),0.64,0.1957
+Single-View (Numerical),0.72,0.578
+Multi-View (Final),0.75,--

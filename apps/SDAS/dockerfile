@@ -1,0 +1,23 @@
+# Use an official PHP image as a parent image
+FROM local/php-seeder-base:latest
+
+# Install necessary PHP extensions
+RUN docker-php-ext-install mysqli
+
+# Copy the source code into the container
+COPY . /var/www/html/
+
+# Copy the custom Apache configuration
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Set up the working directory
+WORKDIR /var/www/html/
+
+# Ensure permissions are set for Apache
+RUN chown -R www-data:www-data /var/www/html/
+
+# Expose port 80 to be mapped to a random port
+EXPOSE 80
+
+# Start Apache in the foreground
+CMD ["apache2-foreground"]

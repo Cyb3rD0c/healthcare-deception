@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+  pharmacy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pharmacy-app
+    ports:
+      - "8087:80"
+    volumes:
+      - ./pharmacy:/var/www/html
+      - pharmacy-db:/var/www/html/db
+    networks:
+      - elk_network
+
+volumes:
+  pharmacy-db:
+
+networks:
+  elk_network:
+    external: true

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  clinic_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clinic_db
+    volumes:
+      - ./Database/clinic_db.sql:/docker-entrypoint-initdb.d/database.sql
+      - clinic_db_data:/var/lib/mysql
+    ports:
+      - "3310:3306"
+    networks:
+      - elk_network
+    restart: on-failure
+
+  clinic_app:
+    image: zeeshanzulkiflshah43643/clinic-management_system:latest
+    depends_on:
+      - clinic_db
+    ports:
+      - "8105:80"
+    networks:
+      - elk_network
+    volumes:
+      - ./sourcecode:/var/www/html
+      - ./logs:/var/log/myapp
+      - wazuh_agent_data:/var/ossec/data
+      - wazuh_agent_logs:/var/ossec/logs
+      - wazuh_agent_etc:/var/ossec/etc
+    restart: on-failure
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  clinic_db_data:
+  wazuh_agent_data:
+  wazuh_agent_logs:
+  wazuh_agent_etc:

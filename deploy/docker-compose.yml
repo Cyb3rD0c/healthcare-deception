@@ -1,0 +1,1330 @@
+version: "3.8"
+
+services:
+
+  fhmssp_app:
+    build:
+      context: ../apps/FHMSSP
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: fhmssp_db
+      DB_USER: hmsuser
+      DB_PASS: hmspassword
+      DB_NAME: hms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      fhmssp_db:
+        condition: service_healthy
+    healthcheck:
+      # use CMD-SHELL so we can use the container's own $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  fhmssp_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hms
+      MYSQL_USER: hmsuser
+      MYSQL_PASSWORD: hmspassword
+    healthcheck:
+      # use CMD-SHELL so we can use the container's own $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+
+    volumes:
+      - fhmssp_db_data:/var/lib/
+      - ../apps/FHMSSP/db:/docker-entrypoint-initdb.d:ro
+    networks:
+      - elk_network
+
+  hcpms_app:
+    build:
+      context: ../apps/HCPMS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hcpms_db
+      DB_USER: hcpms_user
+      DB_PASS: hcpms_pass
+      DB_NAME: hcpms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hcpms_db:
+        condition: service_healthy
+    healthcheck:
+      # use CMD-SHELL so we can use the container's own $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hcpms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hcpms
+      MYSQL_USER: hcpms_user
+      MYSQL_PASSWORD: hcpms_pass
+    healthcheck:
+      # use CMD-SHELL so we can use the container's own $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+    volumes:
+      - hcpms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  hcprms_app:
+    build:
+      context: ../apps/HCPRMS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hcprms_db
+      DB_USER: hcprms_user
+      DB_PASS: hcprms_pass
+      DB_NAME: hcprms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hcprms_db:
+        condition: service_healthy
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "mysqladmin ping -h localhost -u root -p\"${MYSQL_ROOT_PASSWORD}\""
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hcprms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hcprms
+      MYSQL_USER: hcprms_user
+      MYSQL_PASSWORD: hcprms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hcprms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  hhims_app:
+    build:
+      context: ../apps/HHIMS
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hhims_db
+      DB_USER: hhims_user
+      DB_PASS: hhims_pass
+      DB_NAME: hhims
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hhims_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hhims_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hhims
+      MYSQL_USER: hhims_user
+      MYSQL_PASSWORD: hhims_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hhims_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  hmsfp_app:
+    build:
+      context: ../apps/HMSFP
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hmsfp_db
+      DB_USER: hmsfp_user
+      DB_PASS: hmsfp_pass
+      DB_NAME: hmsfp
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hmsfp_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hmsfp_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hmsfp
+      MYSQL_USER: hmsfp_user
+      MYSQL_PASSWORD: hmsfp_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hmsfp_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  hms_php_app:
+    build:
+      context: ../apps/HMS_php
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hms_php_db
+      DB_USER: hms_php_user
+      DB_PASS: hms_php_pass
+      DB_NAME: hms_php
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hms_php_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hms_php_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hms_php
+      MYSQL_USER: hms_php_user
+      MYSQL_PASSWORD: hms_php_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hms_php_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  hprms_app:
+    build:
+      context: ../apps/HPRMS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: hprms_db
+      DB_USER: hprms_user
+      DB_PASS: hprms_pass
+      DB_NAME: hprms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      hprms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  hprms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hprms
+      MYSQL_USER: hprms_user
+      MYSQL_PASSWORD: hprms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hprms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  ohcs_app:
+    build:
+      context: ../apps/OHCS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: ohcs_db
+      DB_USER: ohcs_user
+      DB_PASS: ohcs_pass
+      DB_NAME: ohcs
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      ohcs_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  ohcs_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ohcs
+      MYSQL_USER: ohcs_user
+      MYSQL_PASSWORD: ohcs_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ohcs_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  online_hms_app:
+    build:
+      context: ../apps/Online-HMS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: online_hms_db
+      DB_USER: online_hms_user
+      DB_PASS: online_hms_pass
+      DB_NAME: online_hms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      online_hms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  online_hms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: online_hms
+      MYSQL_USER: online_hms_user
+      MYSQL_PASSWORD: online_hms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - online_hms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  openemr_app:
+    build:
+      context: ../apps/Openemr/docker/library/dockers/dev-php-fpm-7-3-redis
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: openemr_db
+      DB_USER: openemr_user
+      DB_PASS: openemr_pass
+      DB_NAME: openemr
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      openemr_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  openemr_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: openemr
+      MYSQL_USER: openemr_user
+      MYSQL_PASSWORD: openemr_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - openemr_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  remoteclinic_app:
+    build:
+      context: ../apps/RemoteClinic
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: remoteclinic_db
+      DB_USER: remoteclinic_user
+      DB_PASS: remoteclinic_pass
+      DB_NAME: remoteclinic
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      remoteclinic_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  remoteclinic_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: remoteclinic
+      MYSQL_USER: remoteclinic_user
+      MYSQL_PASSWORD: remoteclinic_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - remoteclinic_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  sdas_app:
+    build:
+      context: ../apps/SDAS
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: sdas_db
+      DB_USER: sdas_user
+      DB_PASS: sdas_pass
+      DB_NAME: sdas
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      sdas_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  sdas_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: sdas
+      MYSQL_USER: sdas_user
+      MYSQL_PASSWORD: sdas_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - sdas_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  appt_scheduler_app:
+    build:
+      context: ../apps/appt_scheduler
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: appt_scheduler_db
+      DB_USER: appt_scheduler_user
+      DB_PASS: appt_scheduler_pass
+      DB_NAME: appt_scheduler
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      appt_scheduler_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  appt_scheduler_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: appt_scheduler
+      MYSQL_USER: appt_scheduler_user
+      MYSQL_PASSWORD: appt_scheduler_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - appt_scheduler_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  care2x_app:
+    build:
+      context: ../apps/care2x
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: care2x_db
+      DB_USER: care2x_user
+      DB_PASS: care2x_pass
+      DB_NAME: care2x
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      care2x_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  care2x_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: care2x
+      MYSQL_USER: care2x_user
+      MYSQL_PASSWORD: care2x_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - care2x_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  clinic_management_system_app:
+    build:
+      context: ../apps/clinic_management_system
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: clinic_management_system_db
+      DB_USER: clinic_management_system_user
+      DB_PASS: clinic_management_system_pass
+      DB_NAME: clinic_management_system
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      clinic_management_system_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  clinic_management_system_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clinic_management_system
+      MYSQL_USER: clinic_management_system_user
+      MYSQL_PASSWORD: clinic_management_system_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - clinic_management_system_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  covid_tms_app:
+    build:
+      context: ../apps/covid-tms
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: covid_tms_db
+      DB_USER: covid_tms_user
+      DB_PASS: covid_tms_pass
+      DB_NAME: covid_tms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      covid_tms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  covid_tms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: covid_tms
+      MYSQL_USER: covid_tms_user
+      MYSQL_PASSWORD: covid_tms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - covid_tms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  doctor_appt_sys_app:
+    build:
+      context: ../apps/doctor_appt_sys
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: doctor_appt_sys_db
+      DB_USER: doctor_appt_sys_user
+      DB_PASS: doctor_appt_sys_pass
+      DB_NAME: doctor_appt_sys
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      doctor_appt_sys_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  doctor_appt_sys_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: doctor_appt_sys
+      MYSQL_USER: doctor_appt_sys_user
+      MYSQL_PASSWORD: doctor_appt_sys_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - doctor_appt_sys_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  edoc_doctor_appointment_system_app:
+    build:
+      context: ../apps/edoc-doctor-appointment-system
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: edoc_doctor_appointment_system_db
+      DB_USER: edoc_doctor_appointment_system_user
+      DB_PASS: edoc_doctor_appointment_system_pass
+      DB_NAME: edoc_doctor_appointment_system
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      edoc_doctor_appointment_system_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  edoc_doctor_appointment_system_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: edoc_doctor_appointment_system
+      MYSQL_USER: edoc_doctor_appointment_system_user
+      MYSQL_PASSWORD: edoc_doctor_appointment_system_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - edoc_doctor_appointment_system_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  electronic_medical_record_system_php_app:
+    build:
+      context: ../apps/electronic-medical-record-system-php
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: electronic_medical_record_system_php_db
+      DB_USER: electronic_medical_record_system_php_user
+      DB_PASS: electronic_medical_record_system_php_pass
+      DB_NAME: electronic_medical_record_system_php
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      electronic_medical_record_system_php_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  electronic_medical_record_system_php_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: electronic_medical_record_system_php
+      MYSQL_USER: electronic_medical_record_system_php_user
+      MYSQL_PASSWORD: electronic_medical_record_system_php_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - electronic_medical_record_system_php_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  emr_sys_app:
+    build:
+      context: ../apps/emr_sys
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: emr_sys_db
+      DB_USER: emr_sys_user
+      DB_PASS: emr_sys_pass
+      DB_NAME: emr_sys
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      emr_sys_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  emr_sys_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: emr_sys
+      MYSQL_USER: emr_sys_user
+      MYSQL_PASSWORD: emr_sys_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - emr_sys_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  lh_ehr_app:
+    build:
+      context: ../apps/lh-ehr
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: lh_ehr_db
+      DB_USER: lh_ehr_user
+      DB_PASS: lh_ehr_pass
+      DB_NAME: lh_ehr
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      lh_ehr_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  lh_ehr_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lh_ehr
+      MYSQL_USER: lh_ehr_user
+      MYSQL_PASSWORD: lh_ehr_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - lh_ehr_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  openclinic_app:
+    build:
+      context: ../apps/openclinic
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: openclinic_db
+      DB_USER: openclinic_user
+      DB_PASS: openclinic_pass
+      DB_NAME: openclinic
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      openclinic_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  openclinic_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: openclinic
+      MYSQL_USER: openclinic_user
+      MYSQL_PASSWORD: openclinic_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - openclinic_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  pharmacy_med_store_pos_app:
+    build:
+      context: ../apps/pharmacy-med-store-pos
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: pharmacy_med_store_pos_db
+      DB_USER: pharmacy_med_store_pos_user
+      DB_PASS: pharmacy_med_store_pos_pass
+      DB_NAME: pharmacy_med_store_pos
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      pharmacy_med_store_pos_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  pharmacy_med_store_pos_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pharmacy_med_store_pos
+      MYSQL_USER: pharmacy_med_store_pos_user
+      MYSQL_PASSWORD: pharmacy_med_store_pos_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pharmacy_med_store_pos_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  pharmacy_pos_app:
+    build:
+      context: ../apps/pharmacy-pos
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: pharmacy_pos_db
+      DB_USER: pharmacy_pos_user
+      DB_PASS: pharmacy_pos_pass
+      DB_NAME: pharmacy_pos
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      pharmacy_pos_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  pharmacy_pos_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pharmacy_pos
+      MYSQL_USER: pharmacy_pos_user
+      MYSQL_PASSWORD: pharmacy_pos_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pharmacy_pos_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  php_med_cert_generator_app:
+    build:
+      context: ../apps/php-med-cert-generator
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: php_med_cert_generator_db
+      DB_USER: php_med_cert_generator_user
+      DB_PASS: php_med_cert_generator_pass
+      DB_NAME: php_med_cert_generator
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      php_med_cert_generator_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  php_med_cert_generator_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: php_med_cert_generator
+      MYSQL_USER: php_med_cert_generator_user
+      MYSQL_PASSWORD: php_med_cert_generator_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - php_med_cert_generator_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  phpgurukul_hms_app:
+    build:
+      context: ../apps/phpgurukul-hms
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: phpgurukul_hms_db
+      DB_USER: phpgurukul_hms_user
+      DB_PASS: phpgurukul_hms_pass
+      DB_NAME: phpgurukul_hms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      phpgurukul_hms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  phpgurukul_hms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: phpgurukul_hms
+      MYSQL_USER: phpgurukul_hms_user
+      MYSQL_PASSWORD: phpgurukul_hms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - phpgurukul_hms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  pms_app:
+    build:
+      context: ../apps/pms
+      dockerfile: Dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: pms_db
+      DB_USER: pms_user
+      DB_PASS: pms_pass
+      DB_NAME: pms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      pms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  pms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pms
+      MYSQL_USER: pms_user
+      MYSQL_PASSWORD: pms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  projectworld_hms_app:
+    build:
+      context: ../apps/projectworld-hms
+      dockerfile: dockerfile
+    ports:
+      - "80"
+    environment:
+      DB_HOST: projectworld_hms_db
+      DB_USER: projectworld_hms_user
+      DB_PASS: projectworld_hms_pass
+      DB_NAME: projectworld_hms
+      DB_PORT: 3306
+      SEED_ROWS: 50
+    depends_on:
+      projectworld_hms_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elk_network
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py && exec docker-php-entrypoint apache2-foreground"
+
+  projectworld_hms_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: projectworld_hms
+      MYSQL_USER: projectworld_hms_user
+      MYSQL_PASSWORD: projectworld_hms_pass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - projectworld_hms_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+  mirthconnect:
+    image: nextgenhealthcare/connect:4.4.0   # pick the latest tag from Docker Hub
+    container_name: mirthconnect
+    environment:
+      MIRTH_ADMIN_USER: admin
+      MIRTH_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"   # HTTP UI
+      - "8443:8443"   # HTTPS UI
+      - "9001:9001"   # Default MLLP listener for HL7
+    volumes:
+      - ../mirthdata:/opt/mirth-connect/appdata
+      - ./mirth_data/hl7_inbound:/tmp/mirth/hl7_inbound
+    networks:
+      - elk_network
+
+  hl7-sim:
+    build:
+      context: ../apps/hl7-sim
+      dockerfile: Dockerfile
+    environment:
+      HL7_HOST: mirthconnect
+      HL7_PORT: 6661
+      HL7_INTERVAL: 10
+    networks:
+      - elk_network
+
+  suricata:
+    image: jasonish/suricata:6.0.5
+    container_name: suricata
+
+    # give Suricata the permissions it needs to promisc-mode and tune NIC
+    cap_add:
+      - NET_ADMIN
+      - SYS_NICE
+
+    # sniff on the host’s eth0 for ALL traffic
+    network_mode: "host"
+
+    # tell Suricata which config and interface to use
+    command: >
+      -c /etc/suricata/suricata.yaml
+      -i eth0
+
+    # mount your custom configs, rules & logs
+    volumes:
+      # read-only the configs you’ve edited
+      - ./suricata/etc:/etc/suricata:ro
+      # read-only your custom and pulled rule sets
+      - ./suricata/rules:/var/lib/suricata/rules:ro
+      # write alerts/logs back to your host
+      - ./suricata/logs:/var/log/suricata
+
+    depends_on:
+      - mirthconnect
+
+    restart: unless-stopped
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks:
+      - elk_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.0
+    ports:
+      - "5601:5601"
+    networks:
+      - elk_network
+
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+
+  fhmssp_db_data:
+  hcpms_db_data:
+  hcprms_db_data:
+  hhims_db_data:
+  hmsfp_db_data:
+  hms_php_db_data:
+  hprms_db_data:
+  ohcs_db_data:
+  online_hms_db_data:
+  openemr_db_data:
+  remoteclinic_db_data:
+  sdas_db_data:
+  appt_scheduler_db_data:
+  care2x_db_data:
+  clinic_management_system_db_data:
+  covid_tms_db_data:
+  doctor_appt_sys_db_data:
+  edoc_doctor_appointment_system_db_data:
+  electronic_medical_record_system_php_db_data:
+  emr_sys_db_data:
+  lh_ehr_db_data:
+  openclinic_db_data:
+  pharmacy_med_store_pos_db_data:
+  pharmacy_pos_db_data:
+  php_med_cert_generator_db_data:
+  phpgurukul_hms_db_data:
+  pms_db_data:
+  projectworld_hms_db_data:
+  mirth_data:
+  suricata_logs:

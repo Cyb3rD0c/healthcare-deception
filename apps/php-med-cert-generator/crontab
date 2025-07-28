@@ -1,0 +1,1 @@
+*/30 * * * * root /usr/local/bin/log_collector.py >> /var/log/cron.log 2>&1

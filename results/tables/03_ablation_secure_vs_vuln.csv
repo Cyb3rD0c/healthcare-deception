@@ -1,0 +1,7 @@
+Feature,Chi-Square,p-value,Cramer's V,Effect Size
+Alert Types,222.7,$4.53e-18$,0.073,Weak
+Event Types,586.57,$8.24e-76$,0.096,Weak
+Application Protocols,214.74,$1.35e-40$,0.071,Weak
+Source IP Country,2013.57,0,0.22,Moderate
+Source IP ASN,1873.29,0,0.212,Moderate
+Day vs Night Interaction,1979.28,0,0.33,Moderate

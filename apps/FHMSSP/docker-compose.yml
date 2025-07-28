@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  fhmssp_app:
+    build: .
+    # Map container port 80 to a random host port
+    ports:
+      - "80"
+    depends_on:
+      - fhmssp_db
+    environment:
+      # Database connection
+      DB_HOST: fhmssp_db
+      DB_USER: hmsuser
+      DB_PASS: hmspassword
+      DB_NAME: hms
+      DB_PORT: 3306
+      # Number of fake rows per table
+      SEED_ROWS: 50
+    networks:
+      - elk_network
+    # Run the seeder first, then launch Apache
+    entrypoint: >
+      bash -lc "python3 /usr/local/bin/seeder.py &&
+                exec docker-php-entrypoint apache2-foreground"
+
+  fhmssp_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hms
+      MYSQL_USER: hmsuser
+      MYSQL_PASSWORD: hmspassword
+    volumes:
+      - fhmssp_db_data:/var/lib/mysql
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+    external: true
+
+volumes:
+  fhmssp_db_data:

@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  fhmssp_db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hms
+      MYSQL_USER: hmsuser
+      MYSQL_PASSWORD: hmspassword
+
+  fhmssp_app:
+    image: test/fhmssp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: fhmssp_db
+      DB_USER: hmsuser
+      DB_PASS: hmspassword
+      DB_NAME: hms
+      DB_PORT: 3306
+      SEED_ROWS: 10
+    depends_on:
+      - fhmssp_db
+    ports:
+      - "8080:80"    # map container 80 → host 8080 for testing

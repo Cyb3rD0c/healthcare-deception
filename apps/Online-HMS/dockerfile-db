@@ -1,0 +1,11 @@
+# Use the official MySQL image as a base
+FROM mariadb:10.5
+
+# Copy initialization script
+COPY init-db.sh /docker-entrypoint-initdb.d/init-db.sh
+
+# Ensure the script is executable
+RUN chmod +x /docker-entrypoint-initdb.d/init-db.sh
+
+# Start MySQL and run the initialization script
+CMD ["mysqld"]

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  doc_appt_system_web:
+    image: zeeshanzulkiflshah43643/doctorappointmentsystem:latest
+    environment:
+      - DB_HOST=doc_appt_system_db
+      - DB_NAME=sourcecodester_dadb
+      - DB_PASSWORD=root
+      - DB_USER=root
+    networks:
+      - elk_network
+    ports:
+      - "8108:80"
+    volumes:
+      - ./logs/php:/var/log/php
+      - ./config/php.ini:/usr/local/etc/php/php.ini
+      - wazuh_data:/var/ossec/data
+    restart: always
+
+  doc_appt_system_db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: sourcecodester_dadb
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - elk_network
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+
+volumes:
+  db_data: {}
+  wazuh_data: {}
+networks:
+  elk_network:
+    external: true

@@ -1,0 +1,35 @@
+version: '3.1'
+
+services:
+  ohcs-db:
+    image: mariadb:10.5
+    container_name: ohcs-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: sourcecodester_healthcaredb
+      MYSQL_USER: ohcsuser
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - ohcs-db-data:/var/lib/mysql
+      - ./OHCS/sourcecodester_healthcaredb.sql:/docker-entrypoint-initdb.d/sourcecodester_healthcaredb.sql
+    networks:
+      - elk_network
+
+  ohcs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ohcs-app
+    ports:
+      - "8082:80"
+    depends_on:
+      - ohcs-db
+    networks:
+      - elk_network
+
+volumes:
+  ohcs-db-data:
+
+networks:
+  elk_network:
+    external: true

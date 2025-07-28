@@ -1,0 +1,29 @@
+FROM local/php-seeder-base:latest
+
+# Install required PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Copy the application files to the container
+COPY . /var/www/html/
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Copy the Apache config file
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable mod_rewrite
+RUN a2enmod rewrite
+
+# Restart Apache to apply changes
+RUN service apache2 restart
+
+# Add a script to wait for the database to be ready
+COPY wait-for-db.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/wait-for-db.sh
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Start the application
+CMD ["wait-for-db.sh", "openclinic_db", "root", "root_password", "openclinic", "3306", "apache2-foreground"]

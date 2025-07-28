@@ -1,0 +1,22 @@
+[
+    {
+        "timestamp": "2024-06-11T04:54:01.152398",
+        "log": "[11-Jun-2024 04:40:17 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function undefinedFunction() in /var/www/html/trigger_error.php:3",
+        "source": "/var/www/html/logs/php_errors.log"
+    },
+    {
+        "timestamp": "2024-06-11T04:54:01.152424",
+        "log": "Stack trace:",
+        "source": "/var/www/html/logs/php_errors.log"
+    },
+    {
+        "timestamp": "2024-06-11T04:54:01.152425",
+        "log": "#0 {main}",
+        "source": "/var/www/html/logs/php_errors.log"
+    },
+    {
+        "timestamp": "2024-06-11T04:54:01.152427",
+        "log": "thrown in /var/www/html/trigger_error.php on line 3",
+        "source": "/var/www/html/logs/php_errors.log"
+    }
+]

@@ -1,0 +1,40 @@
+version: '3.1'
+
+services:
+  onlinehospitalmanagementsystem-db:
+    build:
+      context: .
+      dockerfile: dockerfile-db # This Dockerfile is for the MariaDB service
+    container_name: hospital-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: onlinehospitalmanagementsystem
+      MYSQL_USER: hospital
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - onlinehospitalmanagementsystem-db-data:/var/lib/mysql
+      - ./Hospital/backup:/var/www/html/backup # Ensure the backup directory is mounted
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh # Mount the init script
+    networks:
+      - elk_network
+
+  onlinehospitalmanagementsystem-app:
+    build:
+      context: .
+      dockerfile: dockerfile # This Dockerfile is for the PHP application
+    container_name: onlinehospitalmanagementsystem-app
+    ports:
+      - "8083:80"
+    volumes:
+      - ./Hospital:/var/www/html
+    depends_on:
+      - onlinehospitalmanagementsystem-db
+    networks:
+      - elk_network
+
+volumes:
+  onlinehospitalmanagementsystem-db-data:
+
+networks:
+  elk_network:
+    external: true

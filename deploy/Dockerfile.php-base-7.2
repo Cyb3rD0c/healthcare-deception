@@ -1,0 +1,35 @@
+# deploy/Dockerfile.php-base-7.2
+FROM php:7.2-apache
+
+LABEL maintainer="Deception Repo Setup"
+
+# 0) Switch Buster to the archive repos
+RUN sed -i \
+      -e 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' \
+      -e 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' \
+      /etc/apt/sources.list \
+ && echo 'Acquire::Check-Valid-Until \"false\";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
+# 1) PHP extensions + enable rewrite
+RUN docker-php-ext-install pdo pdo_mysql mysqli \
+ && a2enmod rewrite
+
+# 2) Install Python3, pip and our Faker seeder dependencies
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      python3 python3-pip \
+ && pip3 install Faker pymysql \
+ && rm -rf /var/lib/apt/lists/*
+
+# 3) Copy the shared seeder script
+COPY seeder.py /usr/local/bin/seeder.py
+RUN chmod +x /usr/local/bin/seeder.py
+
+# 4) Entrypoint: wait for DB → seed → apache
+ENTRYPOINT ["bash","-lc","\
+    for i in {1..10}; do \
+      mysqladmin ping -h\\\"$DB_HOST\\\" -u\\\"$DB_USER\\\" -p\\\"$DB_PASS\\\" --silent && break; \
+      echo '  waiting for DB…'; sleep 2; \
+    done && \
+    python3 /usr/local/bin/seeder.py && \
+    exec docker-php-entrypoint apache2-foreground"]

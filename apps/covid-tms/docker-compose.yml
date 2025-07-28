@@ -1,0 +1,37 @@
+version: '3.1'
+
+services:
+  covidtms-db:
+    image: mariadb:10.5
+    container_name: covidtms-db
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: covidtmsdb
+      MYSQL_USER: covidtms
+      MYSQL_PASSWORD: yourpassword
+    volumes:
+      - covidtms-db-data:/var/lib/mysql
+      - ./covid-tms/SQL/covidtmsdb.sql:/docker-entrypoint-initdb.d/covidtmsdb.sql
+    networks:
+      - elk_network
+
+  covidtms-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: covidtms-app
+    ports:
+      - "8084:80"
+    volumes:
+      - ./covid-tms:/var/www/html
+    depends_on:
+      - covidtms-db
+    networks:
+      - elk_network
+
+volumes:
+  covidtms-db-data:
+
+networks:
+  elk_network:
+    external: true

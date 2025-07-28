@@ -1,0 +1,41 @@
+# Use the official PHP image as a base
+FROM local/php-seeder-base:latest
+
+# Install necessary PHP extensions and other dependencies
+RUN echo 'deb http://archive.debian.org/debian jessie main' > /etc/apt/sources.list \
+    && echo 'deb http://archive.debian.org/debian-security jessie/updates main' >> /etc/apt/sources.list \
+    && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until \
+    && echo 'Acquire::Retries "0";' >> /etc/apt/apt.conf.d/99no-check-valid-until \
+    && apt-get update \
+    && apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --no-install-recommends \
+       libpng-dev \
+       libjpeg-dev \
+       libfreetype6-dev \
+       libmcrypt-dev \
+       libicu-dev \
+       g++ \
+       libzip-dev \
+       zlib1g=1:1.2.8.dfsg-2+deb8u1 \
+       zlib1g-dev=1:1.2.8.dfsg-2+deb8u1 \
+    && docker-php-ext-configure gd --with-png-dir=/usr/include --with-jpeg-dir=/usr/include --with-freetype-dir=/usr/include \
+    && docker-php-ext-install gd mysqli \
+    && docker-php-ext-enable mysqli \
+    && a2enmod rewrite
+
+# Copy the application files to the web server's root directory
+COPY . /var/www/html/
+
+# Copy custom virtual host configuration
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable custom site configuration
+RUN a2ensite 000-default
+
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html/
+
+# Expose port 80
+EXPOSE 80
+
+# Start Apache server
+CMD ["apache2-foreground"]

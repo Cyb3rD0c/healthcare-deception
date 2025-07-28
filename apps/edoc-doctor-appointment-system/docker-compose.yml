@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  edoc_db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: edoc
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./source/SQL_Database_edoc.sql:/docker-entrypoint-initdb.d/edoc.sql
+    networks:
+      - elk_network
+    ports:
+      - "3314:3306"
+    restart: on-failure
+
+  edoc_app:
+    image: zeeshanzulkiflshah43643/edoc-doctor-appointment-system:latest
+    depends_on:
+      - edoc_db
+    ports:
+      - "8106:80"
+    networks:
+      - elk_network
+    volumes:
+      - ./source/ossec.conf:/var/ossec/etc/ossec.conf
+    restart: on-failure
+
+volumes:
+  db_data:
+
+networks:
+  elk_network:
+    external: true
