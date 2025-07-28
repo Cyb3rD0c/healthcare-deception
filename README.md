@@ -4,7 +4,7 @@ This repository contains all artifacts to reproduce the experiments and analysis
 **“Deception Meets Diagnostics: Deception-Based Real-Time Threat Detection in Healthcare Web Systems.”**
 
 ## 📁 Repository Structure
-
+```
 ├── LICENSE
 ├── README.md
 ├── CITATION.cff # (optional) citation metadata
@@ -31,7 +31,7 @@ This repository contains all artifacts to reproduce the experiments and analysis
 ├── results/ # Final figures & tables
   ├── figures/
   └── tables/
-
+```
 
 
   ## 🚀 Quickstart
@@ -50,17 +50,17 @@ This repository contains all artifacts to reproduce the experiments and analysis
 
   # Bring up all containers: vulnerable apps, Mirth, HL7-sim, Suricata, ELK
   docker-compose up -d
-
+  ```
   You have o setup Mirthconnect for HL7 and run HL7-sim. It will randomly pick from apps/hl7-sim/messages/*.hl7 and push to Mirth on TCP 6661.
 
  ## 🔬 Analysis
- '''bash
+ ```bash
  cd analysis
  python -m venv .venv
  source .venv/bin/activate
  pip install --upgrade pip
  pip install -r requirements.txt
- '''
+ ```
  Then, from analysis/scripts/ you can run scripts.
 
 License
